@@ -1,0 +1,17 @@
+services:
+  releasebridge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: releasebridge046
+    environment:
+      PORT: 3000
+      DATABASE_URL: /app/data/releasebridge.sqlite
+    ports:
+      - "${SERVER_PORT:-3101}:3000"
+    volumes:
+      - releasebridge-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  releasebridge-data:

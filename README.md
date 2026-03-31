@@ -48,7 +48,7 @@ This serves the frontend and API from the same Bun process on port `3000`.
 - GitHub repo target: `https://github.com/obrera/nightshift-046-releasebridge`
 - Intended live URL: `https://releasebridge046.colmena.dev`
 - Intended Dokploy source: `github / obrera / nightshift-046-releasebridge / main / ./docker-compose.yml`
-- Current remote status: blocked in this environment. `gh repo view obrera/nightshift-046-releasebridge` failed with `error connecting to api.github.com`, `gh auth status` reports the saved GitHub token is invalid, and `dokploy verify` failed with `getaddrinfo EAI_AGAIN ship.colmena.dev` plus a local cache write denial at `/home/obrera/.cache/dokploy`.
+- Current remote status: blocked in this environment. `gh repo view obrera/nightshift-046-releasebridge` failed with `error connecting to api.github.com`, `gh auth status` reports the saved GitHub token is invalid, direct `git push -u origin main` failed with `Could not resolve host: github.com`, and `XDG_CACHE_HOME=/tmp/dokploy-cache dokploy verify` failed with `getaddrinfo EAI_AGAIN ship.colmena.dev`.
 
 ## Repository contents
 

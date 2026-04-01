@@ -1,98 +1,126 @@
-export type ReleaseStatus = "planning" | "at-risk" | "blocked" | "ready" | "shipped";
-export type TimelineKind = "blocker" | "note" | "status" | "decision";
+export type ItemType = "incident" | "change";
+export type ItemStatus = "open" | "planned" | "in-progress" | "blocked" | "resolved" | "closed";
+export type Priority = "low" | "medium" | "high" | "critical";
+export type ApprovalState = "pending" | "approved" | "rejected";
+export type ApprovalDecision = "requested" | "approved" | "rejected";
+export type WindowEnvironment = "production" | "staging" | "sandbox";
+export type WindowStatus = "planned" | "approved" | "active" | "completed" | "cancelled";
 
-export interface ReleasePayload {
-  name: string;
-  owner: string;
-  status: ReleaseStatus;
-  riskScore: number;
-  targetDate: string;
-  summary: string;
-  scope: string;
-}
-
-export interface ChecklistPayload {
+export interface ItemPayload {
+  itemType: ItemType;
   title: string;
-  category: string;
-  assignee: string;
-}
-
-export interface TimelinePayload {
-  kind: TimelineKind;
-  body: string;
-  actor: string;
-}
-
-export interface ChecklistItem {
-  id: number;
-  releaseId: number;
-  title: string;
-  category: string;
-  assignee: string;
-  completed: boolean;
-  createdAt: string;
-  completedAt: string | null;
-}
-
-export interface TimelineEntry {
-  id: number;
-  releaseId: number;
-  kind: TimelineKind;
-  body: string;
-  actor: string;
-  createdAt: string;
-}
-
-export interface ReleaseSummary {
-  id: number;
-  name: string;
+  service: string;
+  description: string;
+  status: ItemStatus;
+  priority: Priority;
   owner: string;
-  status: ReleaseStatus;
-  riskScore: number;
-  targetDate: string;
-  summary: string;
-  scope: string;
+  dueDate: string | null;
+  impactSummary: string;
+}
+
+export interface ApprovalRequestPayload {
+  reviewer: string;
+  comment: string;
+}
+
+export interface ApprovalDecisionPayload {
+  decision: "approved" | "rejected";
+  reviewer: string;
+  comment: string;
+}
+
+export interface WindowPayload {
+  title: string;
+  environment: WindowEnvironment;
+  owner: string;
+  status: WindowStatus;
+  startAt: string;
+  endAt: string;
+  notes: string;
+}
+
+export interface DecisionHistoryEntry {
+  id: number;
+  approvalId: number;
+  reviewer: string;
+  decision: ApprovalDecision;
+  comment: string | null;
+  decidedAt: string;
+}
+
+export interface ApprovalRequest {
+  id: number;
+  itemId: number;
+  reviewer: string;
+  status: ApprovalState;
+  latestComment: string | null;
   createdAt: string;
   updatedAt: string;
-  blockerCount: number;
-  checklistCompletion: number;
-  openChecklistCount: number;
+  history: DecisionHistoryEntry[];
 }
 
-export interface ReleaseDetail {
+export interface ItemSummary {
   id: number;
-  name: string;
+  itemType: ItemType;
+  title: string;
+  service: string;
+  description: string;
+  status: ItemStatus;
+  priority: Priority;
   owner: string;
-  status: ReleaseStatus;
-  riskScore: number;
-  targetDate: string;
-  summary: string;
-  scope: string;
+  dueDate: string | null;
+  impactSummary: string;
   createdAt: string;
   updatedAt: string;
-  blockerCount: number;
-  checklistCompletion: number;
-  checklist: ChecklistItem[];
-  timeline: TimelineEntry[];
+  pendingApprovalCount: number;
+  lastDecisionAt?: string | null;
+}
+
+export interface ItemDetail extends ItemSummary {
+  approvals: ApprovalRequest[];
+}
+
+export interface WindowWarning {
+  type: "overlap" | "open-item";
+  message: string;
+  relatedId: number;
+}
+
+export interface DeploymentWindow {
+  id: number;
+  title: string;
+  environment: WindowEnvironment;
+  owner: string;
+  status: WindowStatus;
+  startAt: string;
+  endAt: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+  warnings: WindowWarning[];
 }
 
 export interface DashboardData {
   metrics: {
-    total: number;
-    ready: number;
-    blocked: number;
-    highRisk: number;
-    dueSoon: number;
-    checklistCompletion: number;
+    trackedItems: number;
+    openItems: number;
+    approvalsPending: number;
+    windowConflicts: number;
+    dueThisWeek: number;
   };
-  owners: Array<{ owner: string; count: number }>;
+  statusBreakdown: Array<{ label: ItemStatus; value: number }>;
+  priorityBreakdown: Array<{ label: Priority; value: number }>;
+  trend: Array<{ label: string; created: number; decisions: number; completed: number }>;
   spotlight: Array<{
     id: number;
-    name: string;
+    title: string;
+    itemType: ItemType;
+    service: string;
+    status: ItemStatus;
+    priority: Priority;
     owner: string;
-    status: ReleaseStatus;
-    riskScore: number;
-    targetDate: string;
-    blockerCount: number;
+    dueDate: string | null;
+    pendingApprovalCount: number;
   }>;
+  windows: DeploymentWindow[];
 }

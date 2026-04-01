@@ -1,17 +1,19 @@
 import { relations, sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-export const releases = sqliteTable("releases", {
+export const ledgerItems = sqliteTable("ledger_items", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull(),
-  owner: text("owner").notNull(),
+  itemType: text("item_type").$type<"incident" | "change">().notNull(),
+  title: text("title").notNull(),
+  service: text("service").notNull(),
+  description: text("description").notNull(),
   status: text("status")
-    .$type<"planning" | "at-risk" | "blocked" | "ready" | "shipped">()
+    .$type<"open" | "planned" | "in-progress" | "blocked" | "resolved" | "closed">()
     .notNull(),
-  riskScore: integer("risk_score").notNull(),
-  targetDate: integer("target_date", { mode: "timestamp_ms" }).notNull(),
-  summary: text("summary").notNull(),
-  scope: text("scope").notNull(),
+  priority: text("priority").$type<"low" | "medium" | "high" | "critical">().notNull(),
+  owner: text("owner").notNull(),
+  dueDate: integer("due_date", { mode: "timestamp_ms" }),
+  impactSummary: text("impact_summary").notNull(),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .default(sql`(unixepoch() * 1000)`)
     .notNull(),
@@ -20,53 +22,74 @@ export const releases = sqliteTable("releases", {
     .notNull(),
 });
 
-export const checklistItems = sqliteTable("checklist_items", {
+export const approvalRequests = sqliteTable("approval_requests", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  releaseId: integer("release_id")
-    .references(() => releases.id, { onDelete: "cascade" })
+  itemId: integer("item_id")
+    .references(() => ledgerItems.id, { onDelete: "cascade" })
     .notNull(),
+  reviewer: text("reviewer").notNull(),
+  status: text("status").$type<"pending" | "approved" | "rejected">().notNull(),
+  latestComment: text("latest_comment"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .default(sql`(unixepoch() * 1000)`)
+    .notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .default(sql`(unixepoch() * 1000)`)
+    .notNull(),
+});
+
+export const approvalDecisions = sqliteTable("approval_decisions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  approvalId: integer("approval_id")
+    .references(() => approvalRequests.id, { onDelete: "cascade" })
+    .notNull(),
+  reviewer: text("reviewer").notNull(),
+  decision: text("decision").$type<"requested" | "approved" | "rejected">().notNull(),
+  comment: text("comment"),
+  decidedAt: integer("decided_at", { mode: "timestamp_ms" })
+    .default(sql`(unixepoch() * 1000)`)
+    .notNull(),
+});
+
+export const deploymentWindows = sqliteTable("deployment_windows", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   title: text("title").notNull(),
-  category: text("category").notNull(),
-  assignee: text("assignee").notNull(),
-  completed: integer("completed", { mode: "boolean" }).default(false).notNull(),
+  environment: text("environment").$type<"production" | "staging" | "sandbox">().notNull(),
+  owner: text("owner").notNull(),
+  status: text("status")
+    .$type<"planned" | "approved" | "active" | "completed" | "cancelled">()
+    .notNull(),
+  startAt: integer("start_at", { mode: "timestamp_ms" }).notNull(),
+  endAt: integer("end_at", { mode: "timestamp_ms" }).notNull(),
+  notes: text("notes").notNull(),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .default(sql`(unixepoch() * 1000)`)
     .notNull(),
-  completedAt: integer("completed_at", { mode: "timestamp_ms" }),
-});
-
-export const releaseTimeline = sqliteTable("release_timeline", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  releaseId: integer("release_id")
-    .references(() => releases.id, { onDelete: "cascade" })
-    .notNull(),
-  kind: text("kind").$type<"blocker" | "note" | "status" | "decision">().notNull(),
-  body: text("body").notNull(),
-  actor: text("actor").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
     .default(sql`(unixepoch() * 1000)`)
     .notNull(),
 });
 
-export const releasesRelations = relations(releases, ({ many }) => ({
-  checklist: many(checklistItems),
-  timeline: many(releaseTimeline),
+export const ledgerItemsRelations = relations(ledgerItems, ({ many }) => ({
+  approvals: many(approvalRequests),
 }));
 
-export const checklistItemsRelations = relations(checklistItems, ({ one }) => ({
-  release: one(releases, {
-    fields: [checklistItems.releaseId],
-    references: [releases.id],
+export const approvalRequestsRelations = relations(approvalRequests, ({ one, many }) => ({
+  item: one(ledgerItems, {
+    fields: [approvalRequests.itemId],
+    references: [ledgerItems.id],
+  }),
+  decisions: many(approvalDecisions),
+}));
+
+export const approvalDecisionsRelations = relations(approvalDecisions, ({ one }) => ({
+  approval: one(approvalRequests, {
+    fields: [approvalDecisions.approvalId],
+    references: [approvalRequests.id],
   }),
 }));
 
-export const releaseTimelineRelations = relations(releaseTimeline, ({ one }) => ({
-  release: one(releases, {
-    fields: [releaseTimeline.releaseId],
-    references: [releases.id],
-  }),
-}));
-
-export type ReleaseRow = typeof releases.$inferSelect;
-export type ChecklistItemRow = typeof checklistItems.$inferSelect;
-export type ReleaseTimelineRow = typeof releaseTimeline.$inferSelect;
+export type LedgerItemRow = typeof ledgerItems.$inferSelect;
+export type ApprovalRequestRow = typeof approvalRequests.$inferSelect;
+export type ApprovalDecisionRow = typeof approvalDecisions.$inferSelect;
+export type DeploymentWindowRow = typeof deploymentWindows.$inferSelect;

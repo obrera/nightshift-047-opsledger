@@ -1,62 +1,49 @@
-# ReleaseBridge
+# OpsLedger
 
-ReleaseBridge is Nightshift build 046: a backend-first Bun + Hono + React release readiness cockpit for small teams. It runs as a single container, persists release state in SQLite via Drizzle, and serves both the API and frontend from one Bun process.
+OpsLedger is a dark-mode full-stack TypeScript app for operating teams that need one place to track incidents and planned changes, run reviewer approvals, and schedule deployment windows without colliding with open operational work.
+
+Live URL: https://opsledger047.colmena.dev
+
+Challenge reference: `2026-04-01 Nightshift build 047`
 
 ## Stack
 
-- TypeScript
-- Bun
-- Hono backend
+- TypeScript across frontend and backend
+- Hono API server
 - React + Vite frontend
-- Tailwind CSS dark UI
-- SQLite persistence via Drizzle ORM
-- Single-container deployment serving API + frontend on one domain
+- Tailwind CSS styling
+- SQLite durable persistence on disk with Bun SQLite + Drizzle schema
+- Single-container deployment via Dokploy
 
-## Capabilities
+## Product capabilities
 
-- Create and update release entries with target date, owner, status, risk score, summary, and scope.
-- Track checklist items per release with completion state, assignee ownership, and progress percentages.
-- Maintain a blockers and notes timeline feed with status changes and decisions attached to each release.
-- Review dashboard metrics and filter the board by search, status, owner, risk band, and blocker presence.
+- Incident/change log CRUD with status, priority, owner, service, impact, and due date
+- Approval workflow with request, approve/reject actions, reviewer comment, and timestamped decision history
+- Deployment window planner with overlap and open-item conflict warnings
+- Dashboard metrics plus a 7-day operational trend chart
 
-## Local development
-
-```bash
-bun install
-bun run dev
-```
-
-The application listens on `http://localhost:3000`.
-
-## Local build verification
+## Local run
 
 ```bash
 bun install
 bun run build
+PORT=3001 bun run start
 ```
 
-## Container
+For development:
 
 ```bash
-docker compose up --build
+bun run dev
 ```
 
-This serves the frontend and API from the same Bun process on port `3000`.
+SQLite data defaults to `./data/opsledger.sqlite`. Override with `DATABASE_URL=/path/to/file.sqlite`.
 
-## Deployment metadata
+## Deployment
 
-- GitHub repo target: `https://github.com/obrera/nightshift-046-releasebridge`
-- Intended live URL: `https://releasebridge046.colmena.dev`
-- Intended Dokploy source: `github / obrera / nightshift-046-releasebridge / main / ./docker-compose.yml`
-- Current remote status: blocked in this environment. `gh repo view obrera/nightshift-046-releasebridge` failed with `error connecting to api.github.com`, `gh auth status` reports the saved GitHub token is invalid, direct `git push -u origin main` failed with `Could not resolve host: github.com`, and `XDG_CACHE_HOME=/tmp/dokploy-cache dokploy verify` failed with `getaddrinfo EAI_AGAIN ship.colmena.dev`.
+The app serves frontend assets and API routes from the same Hono process and is designed for a single Dokploy compose deployment.
 
-## Repository contents
+## Metadata
 
-- [`server/index.ts`](/home/obrera/projects/nightshift-046-releasebridge/server/index.ts): Hono server bootstrap and static asset serving.
-- [`server/routes/releases.ts`](/home/obrera/projects/nightshift-046-releasebridge/server/routes/releases.ts): release CRUD, checklist, and timeline endpoints.
-- [`server/routes/dashboard.ts`](/home/obrera/projects/nightshift-046-releasebridge/server/routes/dashboard.ts): readiness metrics and spotlight feed.
-- [`client/src/App.tsx`](/home/obrera/projects/nightshift-046-releasebridge/client/src/App.tsx): release board, filters, checklist workspace, and timeline UI.
-
-## License
-
-MIT
+- Model: GPT-5 Codex
+- Agent: Codex CLI coding agent
+- Repository target: https://github.com/obrera/nightshift-047-opsledger

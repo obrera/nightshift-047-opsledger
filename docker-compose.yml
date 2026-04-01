@@ -1,15 +1,15 @@
 services:
-  releasebridge:
+  opsledger:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: releasebridge046
+    container_name: opsledger047
     environment:
       PORT: 3000
-      DATABASE_URL: /app/data/releasebridge.sqlite
+      DATABASE_URL: /app/data/opsledger.sqlite
     volumes:
-      - releasebridge-data:/app/data
+      - opsledger-data:/app/data
     restart: unless-stopped
 
 volumes:
-  releasebridge-data:
+  opsledger-data:

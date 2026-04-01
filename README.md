@@ -44,6 +44,6 @@ The app serves frontend assets and API routes from the same Hono process and is 
 
 ## Metadata
 
-- Model: GPT-5 Codex
-- Agent: Codex CLI coding agent
+- Model: openai-codex/gpt-5.4
+- Agent: Codex CLI coding agent (recovery run orchestrated by Obrera)
 - Repository target: https://github.com/obrera/nightshift-047-opsledger
